@@ -1,0 +1,127 @@
+Microsoft Windows [Version 6.1.7601]
+Copyright (c) 2009 Microsoft Corporation. Alle Rechte vorbehalten.
+
+C:\Users\Administrator>cd /d J:\Develop\VSM\V1.0\VSMServer
+
+J:\Develop\VSM\V1.0\VSMServer>keytool -genkey -alias server -keyalg RSA -keystore vsmserver.jks
+Keystore-Kennwort eingeben:
+Neues Kennwort erneut eingeben:
+Wie lautet Ihr Vor- und Nachname?
+  [Unknown]:  Store
+Wie lautet der Name Ihrer organisatorischen Einheit?
+  [Unknown]:
+Wie lautet der Name Ihrer Organisation?
+  [Unknown]:
+Wie lautet der Name Ihrer Stadt oder Gemeinde?
+  [Unknown]:
+Wie lautet der Name Ihres Bundeslands?
+  [Unknown]:
+Wie lautet der Lõndercode (zwei Buchstaben) f³r diese Einheit?
+  [Unknown]:  DE
+Ist CN=Store, OU=Unknown, O=Unknown, L=Unknown, ST=Unknown, C=DE richtig?
+  [Nein]:  Ja
+
+Schl³sselkennwort f³r <server> eingeben
+        (RETURN, wenn identisch mit Keystore-Kennwort):
+
+J:\Develop\VSM\V1.0\VSMServer>keytool -genkey -alias client -keyalg RSA -keystore vsmclient.jks
+Keystore-Kennwort eingeben:
+Neues Kennwort erneut eingeben:
+Wie lautet Ihr Vor- und Nachname?
+  [Unknown]:  Store
+Wie lautet der Name Ihrer organisatorischen Einheit?
+  [Unknown]:
+Wie lautet der Name Ihrer Organisation?
+  [Unknown]:
+Wie lautet der Name Ihrer Stadt oder Gemeinde?
+  [Unknown]:
+Wie lautet der Name Ihres Bundeslands?
+  [Unknown]:
+Wie lautet der Lõndercode (zwei Buchstaben) f³r diese Einheit?
+  [Unknown]:  DE
+Ist CN=Store, OU=Unknown, O=Unknown, L=Unknown, ST=Unknown, C=DE richtig?
+  [Nein]:  Ja
+
+Schl³sselkennwort f³r <client> eingeben
+        (RETURN, wenn identisch mit Keystore-Kennwort):
+
+J:\Develop\VSM\V1.0\VSMServer>keytool -export -file vsmserver.cert -keystore vsmserver.jks -storepass 1234fuenf -alias server
+Zertifikat in Datei <vsmserver.cert> gespeichert
+
+J:\Develop\VSM\V1.0\VSMServer>keytool -export -file vsmclient.cert -keystore vsmclient.jks -storepass 1234fuenf -alias client
+Zertifikat in Datei <vsmclient.cert> gespeichert
+
+J:\Develop\VSM\V1.0\VSMServer>keytool -printcert -v -file vsmserver.cert
+Eigent³mer: CN=Store, OU=Unknown, O=Unknown, L=Unknown, ST=Unknown, C=DE
+Aussteller: CN=Store, OU=Unknown, O=Unknown, L=Unknown, ST=Unknown, C=DE
+Seriennummer: 5180927c
+G³ltig von: Sat Jul 27 12:59:57 CEST 2013 bis: Fri Oct 25 12:59:57 CEST 2013
+Zertifikat-Fingerprints:
+         MD5:  5F:2D:A0:BE:C7:1D:64:4A:7A:C8:19:66:AA:7F:88:1F
+         SHA1: 14:34:00:6D:AC:60:ED:81:EF:E7:1F:4F:AB:C6:42:C9:08:41:28:4F
+         SHA256: ED:CF:15:87:F3:0C:FD:76:27:DA:F8:A2:83:46:E1:CF:09:DF:4F:40:69:74:B4:C4:E8:F4:D4:40:57:48:12:21
+         Signaturalgorithmusname: SHA256withRSA
+         Version: 3
+
+Erweiterungen:
+
+#1: ObjectId: 2.5.29.14 Criticality=false
+SubjectKeyIdentifier [
+KeyIdentifier [
+0000: 12 C5 78 D2 3E 73 F7 AC   D1 A0 A8 15 49 D4 41 54  ..x.>s......I.AT
+0010: CC 31 4B 1C                                        .1K.
+]
+]
+
+
+J:\Develop\VSM\V1.0\VSMServer>keytool -import -file vsmclient.cert -keystore vsmserver.jks -storepass 1234fuenf -alias client
+Eigent³mer: CN=Store, OU=Unknown, O=Unknown, L=Unknown, ST=Unknown, C=DE
+Aussteller: CN=Store, OU=Unknown, O=Unknown, L=Unknown, ST=Unknown, C=DE
+Seriennummer: 37c15d9f
+G³ltig von: Sat Jul 27 13:01:10 CEST 2013 bis: Fri Oct 25 13:01:10 CEST 2013
+Zertifikat-Fingerprints:
+         MD5:  85:A5:AE:7C:26:1A:9F:0F:75:20:0E:A9:8B:5D:E7:80
+         SHA1: AF:79:C3:9C:66:29:20:9B:71:64:BB:14:5D:82:BA:FE:43:8A:00:41
+         SHA256: E3:AB:81:86:9D:11:5F:E4:3D:34:DB:23:36:72:05:60:DB:5E:1B:F4:86:26:13:B7:5C:CC:B0:B7:5C:67:91:F2
+         Signaturalgorithmusname: SHA256withRSA
+         Version: 3
+
+Erweiterungen:
+
+#1: ObjectId: 2.5.29.14 Criticality=false
+SubjectKeyIdentifier [
+KeyIdentifier [
+0000: 62 41 07 08 98 FE CD DE   AA C9 9A C8 3E 55 3C 2D  bA..........>U<-
+0010: EE FE D7 73                                        ...s
+]
+]
+
+Diesem Zertifikat vertrauen? [Nein]:  Ja
+Zertifikat wurde Keystore hinzugef³gt
+
+J:\Develop\VSM\V1.0\VSMServer>keytool -import -file vsmserver.cert -keystore vsmclient.jks -storepass 1234fuenf -alias server
+Eigent³mer: CN=Store, OU=Unknown, O=Unknown, L=Unknown, ST=Unknown, C=DE
+Aussteller: CN=Store, OU=Unknown, O=Unknown, L=Unknown, ST=Unknown, C=DE
+Seriennummer: 5180927c
+G³ltig von: Sat Jul 27 12:59:57 CEST 2013 bis: Fri Oct 25 12:59:57 CEST 2013
+Zertifikat-Fingerprints:
+         MD5:  5F:2D:A0:BE:C7:1D:64:4A:7A:C8:19:66:AA:7F:88:1F
+         SHA1: 14:34:00:6D:AC:60:ED:81:EF:E7:1F:4F:AB:C6:42:C9:08:41:28:4F
+         SHA256: ED:CF:15:87:F3:0C:FD:76:27:DA:F8:A2:83:46:E1:CF:09:DF:4F:40:69:74:B4:C4:E8:F4:D4:40:57:48:12:21
+         Signaturalgorithmusname: SHA256withRSA
+         Version: 3
+
+Erweiterungen:
+
+#1: ObjectId: 2.5.29.14 Criticality=false
+SubjectKeyIdentifier [
+KeyIdentifier [
+0000: 12 C5 78 D2 3E 73 F7 AC   D1 A0 A8 15 49 D4 41 54  ..x.>s......I.AT
+0010: CC 31 4B 1C                                        .1K.
+]
+]
+
+Diesem Zertifikat vertrauen? [Nein]:  Ja
+Zertifikat wurde Keystore hinzugef³gt
+
+J:\Develop\VSM\V1.0\VSMServer>
