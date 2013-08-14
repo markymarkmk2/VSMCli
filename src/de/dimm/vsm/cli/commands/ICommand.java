@@ -19,5 +19,5 @@ public interface ICommand
     List<String> getErrors();
     String getErrorText();
     boolean hasErrors();
-    
+    String usage();
 }

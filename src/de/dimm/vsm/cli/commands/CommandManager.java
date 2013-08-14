@@ -4,9 +4,9 @@
  */
 package de.dimm.vsm.cli.commands;
 
-import de.dimm.vsm.cli.CliApi;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -22,6 +22,7 @@ public class CommandManager
         
         addCommand( new CmdMount() );
         addCommand( new CmdUnmount() );        
+        addCommand( new CmdStatus() );
     }
     
     private void addCommand( ICommand cmd)
@@ -37,5 +38,10 @@ public class CommandManager
     public boolean cmdExists(String cmdName)
     {
         return cmdList.containsKey(cmdName);
-    }        
+    }   
+    public Set<String> getCommands()
+    {
+        return cmdList.keySet();
+    }
+            
 }

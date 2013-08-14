@@ -4,6 +4,7 @@
  */
 package de.dimm.vsm.cli;
 
+import com.caucho.hessian.client.HessianRuntimeException;
 import de.dimm.vsm.auth.GuiUser;
 import de.dimm.vsm.auth.User;
 import de.dimm.vsm.cli.ServerConnector.GuiLoginApiEntry;
@@ -11,18 +12,21 @@ import de.dimm.vsm.cli.ServerConnector.GuiServerApiEntry;
 import de.dimm.vsm.cli.commands.AbstractCommand;
 import de.dimm.vsm.cli.commands.CommandManager;
 import de.dimm.vsm.cli.commands.ICommand;
+import de.dimm.vsm.hash.StringUtils;
 import de.dimm.vsm.log.LogListener;
 import de.dimm.vsm.log.LogManager;
 import de.dimm.vsm.net.GuiWrapper;
 import de.dimm.vsm.net.interfaces.GuiLoginApi;
 import de.dimm.vsm.net.interfaces.GuiServerApi;
 import de.dimm.vsm.records.RoleOption;
+import java.io.File;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -32,6 +36,7 @@ import java.util.logging.Logger;
  */
 public class CliMain
 {
+    public static final String PREFS_FOLDER = "preferences";
 
     private GuiWrapper guiWrapper;
     private boolean loggedIn;
@@ -49,13 +54,59 @@ public class CliMain
     ServerConnector connector;
     boolean ssl = true;
     
-    
+    private String version = "0.2";
+
+    public String getVersion()
+    {
+        return version;
+    }
 
     public CliMain()
     {
-        
+        initPrefs();
         cmdMgr = new CommandManager();
     }
+    
+    private void initPrefs()
+    {
+        File f = new File(PREFS_FOLDER);
+        if (!f.exists())
+            f.mkdir();
+        
+        File logprefs = new File(PREFS_FOLDER, "log_prefs.dat");
+        if (!logprefs.exists())
+        {
+            try
+            {
+                RandomAccessFile raf = new RandomAccessFile(logprefs, "rw");
+                raf.close();
+            }
+            catch (IOException iOException)
+            {
+                iOException.printStackTrace();
+            }
+        }
+    }
+    static boolean isJava7orBetter()
+    {
+        String javaVer = System.getProperty("java.version");
+        try
+        {
+
+            String[] a = javaVer.split("\\.");
+            int maj = Integer.parseInt(a[0]);
+            int min = Integer.parseInt(a[1]);
+            if (maj == 1 && min < 7)
+            {
+                return false;
+            }
+        }
+        catch (Exception exc)
+        {
+            System.out.println("Fehler beim Ermitten der Javaversion: " + javaVer + ": " + exc.getMessage());
+        }
+        return true;
+    }        
 
     public boolean isSsl()
     {
@@ -69,28 +120,26 @@ public class CliMain
         String keyPwd = "1234fuenf";            
         String host = "127.0.0.1";
         port = 8443; 
-        user = "system";
-        pwd = "helikon";
         
         for (int i = 0; i < args.length; i++)
         {
             String arg = args[i];
-            if (arg.equals("-h") && i < args.length - 1)
+            if (arg.equals("--host") && i < args.length - 1)
             {
                 host = args[i+1];
                 i++;
             }
-            if (arg.equals("-p") && i < args.length - 1)
+            if (arg.equals("--port") && i < args.length - 1)
             {
                 port = Integer.parseInt(args[i+1]);
                 i++;
             }
-            if (arg.equals("-u") && i < args.length - 1)
+            if (arg.equals("--user") && i < args.length - 1)
             {
                 user = args[i+1];
                 i++;
             }
-            if (arg.equals("-x") && i < args.length - 1)
+            if (arg.equals("--pwd") && i < args.length - 1)
             {
                 pwd = args[i+1];
                 i++;
@@ -105,6 +154,21 @@ public class CliMain
                 keyPwd = args[i+1];
                 i++;
             }
+            if (arg.equals("--42"))
+            {
+                user = "system";
+                pwd = "helikon";
+            }
+        }
+        if (StringUtils.isEmpty(user))
+        {
+            error("Bitte geben Sie einen Benutzernamen mit --user an");
+            usage();
+        }
+        if (StringUtils.isEmpty(pwd))
+        {
+            error("Bitte geben Sie das Benutzerpasswort mit --pwd an");
+            usage();
         }
         
         connector = new ServerConnector(keyStore, keyPwd);        
@@ -378,6 +442,11 @@ public class CliMain
     
     public static void main( String[] args)
     {
+        if (!isJava7orBetter())
+        {
+            System.err.printf("VSM-Commandozeilen-Client: Sie benötigen eine Java-Version >= 1.7");
+            System.exit(1);
+        }
         CliMain main = new CliMain();
         
         try
@@ -387,38 +456,60 @@ public class CliMain
         catch (UnknownHostException unknownHostException)
         {
             System.err.printf("Fehler beim Aufloesen des Hostnamens: " + unknownHostException.getMessage());
-            return;
+            System.exit(1);
         }
+        ICommand cmd = main.checkCommand(args);
         
-        
+        boolean ret = false;
         try
         {
             if (main.tryLogin())
             {
-                GuiServerApi api = main.getGuiServerApi();
-                Properties props = api.getProperties();
-                System.out.println("Verbunden mit VSM Server Version: " + props.getProperty("Version"));
-                
-                boolean ret = main.handleCommand(args);
-                
-                main.logout();                
                 
                 
+                ret = cmd.exec(main.uiApi);
+                if (!ret)
+                {
+                    main.logError( "Fehler beim Ausführen von Befehl %s: %s", cmd.getName(), cmd.getErrorText());
+                }
                 System.exit(ret ? 0 : 1);
-                
             }
             else
             {
-                System.err.printf("Anmeldung ist fehlgeschlagen");                
-                System.exit(2);
+                System.err.printf("Anmeldung ist fehlgeschlagen");                                
             }            
+        }
+        catch (ConnectException exc)
+        {
+            System.err.printf("Host " + main.addr.toString() + ":" + main.port + " konnte nicht kontaktiert werden");                
+            System.exit(3);
+        }
+        catch ( HessianRuntimeException hexc)
+        {
+            if (hexc.getCause().getClass() == ConnectException.class)
+            {
+                System.err.printf("Host " + main.addr.toString() + ":" + main.port + " konnte nicht kontaktiert werden");                
+                System.exit(3);
+            }
+            System.err.printf("Protokoll ist fehlgeschlagen: " + hexc.getMessage());                
+            System.exit(4);
         }
         catch (IOException iOException)
         {
-            System.err.printf("Connect ist fehlgeschlagen");                
-            System.exit(3);
+            System.err.printf("Connect ist fehlgeschlagen: " + iOException.getMessage());                
+            System.exit(5);
         }
-        
+        finally
+        {
+            try
+            {
+                main.logout();                
+            }
+            catch (IOException iOException)
+            {
+            }
+        }
+        System.exit(2);        
     }
 
     protected void logError(String err, Object... params)
@@ -427,9 +518,10 @@ public class CliMain
         Logger.getLogger(AbstractCommand.class.getName()).log(Level.SEVERE, s);
     }
     
-    private boolean handleCommand( String[] args )
+    private ICommand checkCommand( String[] args )
     {       
         String cmdName = null;
+        boolean doHelp = false;
         for (int i = 0; i < args.length; i++)
         {
             String arg = args[i];
@@ -438,41 +530,70 @@ public class CliMain
                 cmdName = args[i+1];
                 i++;
             }
-            if (arg.equals("-p") && i < args.length - 1)
+            if (arg.equals("--help") || arg.equals("-?") || arg.equals("-h")  )
             {
-                port = Integer.parseInt(args[i+1]);
-                i++;
+                doHelp = true;
+                if (i < args.length - 1)
+                {
+                    cmdName = args[i+1];
+                    i++;
+                }                
             }
-            if (arg.equals("-u") && i < args.length - 1)
-            {
-                user = args[i+1];
-                i++;
-            }
-            if (arg.equals("-x") && i < args.length - 1)
-            {
-                pwd = args[i+1];
-                i++;
-            }
+            
         }      
+        
+        if (doHelp || cmdName == null)
+        {
+            usage(cmdName);            
+        }
         
         if (!cmdMgr.cmdExists(cmdName))
         {
-            logError( "Unbekannter Befehl %s", cmdName);
-            return false;
+            usage(cmdName); 
         }
+        
         ICommand cmd = cmdMgr.getCmd(cmdName);
         
         if (!cmd.readArgs(args))
         {
             logError(  "Fehler beim Lesen der Parameter fuer Befehl %s: %s", cmdName, cmd.getErrorText());
-            return false;
+            usage(cmdName); 
         }
-        if (!cmd.exec(uiApi))
+        return cmd;
+    }
+
+    private void usage( )
+    {
+        usage(null);
+    }
+    private void usage( String cmdName )
+    {
+        StringBuilder sb = new StringBuilder();
+        sb.append("\nCommandClient for VSM V");
+        sb.append(getVersion());
+        sb.append("\n");
+            
+        ICommand cmd = cmdMgr.getCmd(cmdName);
+            
+        if (cmd == null)
         {
-            logError(  "Fehler beim Ausführen von Befehl %s: %s", cmdName, cmd.getErrorText());
-            return false;
+            sb.append("\nUsage:         --user username --pwd password --cmd <CommandName> [Optional args]");
+            sb.append("\nOptional args: --host Host --port port ");
+            sb.append("\nSSL-Options:   --keyStore <Path to Keystore> --keyPath <Password of keystore>");
+            sb.append("\nHelp:          --help|-? [<CommandName>]\n\nAvailable commands are:\n");
+            for (String name :cmdMgr.getCommands())
+            {
+                sb.append(name);
+                sb.append("\n");
+            }            
         }
-        return true;                
+        else
+        {
+            sb.append(cmd.usage());
+            sb.append("\n");            
+        }
+        System.err.println(sb.toString());
+        System.exit(3);
     }
     
    

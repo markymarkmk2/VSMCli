@@ -55,5 +55,12 @@ public class CmdUnmount extends AbstractCommand
         mountName = getStringArg("name", args);
         return !hasErrors();
     }
+
+    @Override
+    public String usage()
+    {
+        return usage("Unmount a VSM-Mount", new String[] {"--name <VSM-MountName>"}, null); 
+    }
+    
     
 }

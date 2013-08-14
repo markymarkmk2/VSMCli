@@ -87,6 +87,40 @@ public abstract class AbstractCommand implements ICommand
         return !errors.isEmpty();
     }
     
+    protected String usage( String usage, String[] options, String[] optOptions)
+    {
+        StringBuilder sb = new StringBuilder();
+        sb.append(usage);
+        if (options != null || optOptions != null)        
+            sb.append("\n\nArgs:");
+        
+        if (options != null)
+        {
+            for (int i = 0; i < options.length; i++)
+            {
+                String string = options[i];
+                if ( i> 0)
+                    sb.append("\n");
+                sb.append("\t");
+                sb.append(string);            
+            }
+        }
+        sb.append("\n");
+        if (optOptions != null)
+        {
+            for (int i = 0; i < optOptions.length; i++)
+            {
+                String string = optOptions[i];
+                if ( i> 0)
+                    sb.append("\n");
+                sb.append("\t[");            
+                sb.append(string);            
+                sb.append("]");                        
+            }
+        }
+        
+        return sb.toString();
+    }
     
     
     
