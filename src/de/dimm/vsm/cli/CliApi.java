@@ -666,5 +666,22 @@ public class CliApi implements GuiServerApi
     {
         return new Properties();
     }
+
+    @Override
+    public void scanDatabase(  User user, AbstractStorageNode node )
+    {
+        GuiServerApi guiServerApi = checkLogin();
+        if (guiServerApi != null)
+            guiServerApi.scanDatabase( user, node );       
+        
+    }
+    @Override
+    public void rebuildBootstraps( User user, StoragePool pool )
+    {
+        GuiServerApi guiServerApi = checkLogin();
+        if (guiServerApi != null)
+            guiServerApi.rebuildBootstraps( user, pool );
+    }
+    
     
 }
