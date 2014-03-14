@@ -26,7 +26,20 @@ import javax.net.ssl.SSLSession;
 public class ServerConnector
 {
     
+    private static int connTimeout = 5000;
+    private static int txTimeout = 60*1000;
+
+    public static void setConnTimeout( int connTimeout )
+    {
+        ServerConnector.connTimeout = connTimeout;
+    }
+
+    public static void setTxTimeout( int txTimeout )
+    {
+        ServerConnector.txTimeout = txTimeout;
+    }
   
+    
 
     private static class CustomizedHostnameVerifier implements HostnameVerifier
     {
@@ -135,7 +148,7 @@ public class ServerConnector
         AgentApiEntry apiEntry = null;        
         try
         {
-            RemoteCallFactory factory = new RemoteCallFactory(adress, port, path, ssl, tcp);
+            RemoteCallFactory factory = new RemoteCallFactory(adress, port, path, ssl, tcp, connTimeout, txTimeout);
             AgentApi api = (AgentApi) factory.create(AgentApi.class);            
             apiEntry = new AgentApiEntry(api, factory);
         }
@@ -152,7 +165,7 @@ public class ServerConnector
 
         try
         {
-            RemoteCallFactory factory = new RemoteCallFactory(adress, port, path, ssl, tcp);
+            RemoteCallFactory factory = new RemoteCallFactory(adress, port, path, ssl, tcp, connTimeout, txTimeout);
             GuiServerApi api = (GuiServerApi) factory.create(GuiServerApi.class);
             apiEntry = new GuiServerApiEntry(api, factory);
         }
@@ -169,7 +182,7 @@ public class ServerConnector
 
         try
         {
-            RemoteCallFactory factory = new RemoteCallFactory(adress, port, path, ssl, tcp);
+            RemoteCallFactory factory = new RemoteCallFactory(adress, port, path, ssl, tcp, connTimeout, txTimeout);
 
             GuiLoginApi api = (GuiLoginApi) factory.create(GuiLoginApi.class);
             apiEntry = new GuiLoginApiEntry(api, factory);
