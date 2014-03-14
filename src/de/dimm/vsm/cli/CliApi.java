@@ -681,6 +681,15 @@ public class CliApi implements GuiServerApi
         return false;
     }
 
+    @Override
+    public boolean isWrapperValid( IWrapper wrapper )
+    {
+        GuiServerApi guiServerApi = checkLogin();
+        if (guiServerApi != null)
+            return guiServerApi.isWrapperValid(wrapper);
+        return false;
+    }
+
     
     
 }
