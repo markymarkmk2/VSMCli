@@ -20,6 +20,7 @@ import de.dimm.vsm.net.StoragePoolWrapper;
 import de.dimm.vsm.net.interfaces.GuiLoginApi;
 import de.dimm.vsm.net.interfaces.GuiServerApi;
 import de.dimm.vsm.net.interfaces.IWrapper;
+import de.dimm.vsm.preview.IPreviewData;
 import de.dimm.vsm.records.AbstractStorageNode;
 import de.dimm.vsm.records.ArchiveJob;
 import de.dimm.vsm.records.FileSystemElemNode;
@@ -166,7 +167,7 @@ public class CliApi implements GuiServerApi
     }
 
     @Override
-    public List<RemoteFSElem> listDir( StoragePoolWrapper wrapper, RemoteFSElem path ) throws SQLException
+    public List<RemoteFSElem> listDir( IWrapper wrapper, RemoteFSElem path ) throws SQLException
     {
         GuiServerApi guiServerApi = checkLogin();
         if (guiServerApi != null)
@@ -688,6 +689,33 @@ public class CliApi implements GuiServerApi
         if (guiServerApi != null)
             return guiServerApi.isWrapperValid(wrapper);
         return false;
+    }
+
+    @Override
+    public List<IPreviewData> getPreviewData( IWrapper wrapper, List<RemoteFSElem> path ) throws SQLException, IOException {
+        GuiServerApi guiServerApi = checkLogin();
+        if (guiServerApi != null)
+            return guiServerApi.getPreviewData(wrapper, path);
+        
+        return null;
+    }
+
+    @Override
+    public int createWebDavServer( StoragePoolWrapper wrapper ) throws IOException, PoolReadOnlyException, PathResolveException {
+        GuiServerApi guiServerApi = checkLogin();
+        if (guiServerApi != null)
+            return guiServerApi.createWebDavServer(wrapper);
+        
+        return -1;
+    }
+
+    @Override
+    public int createWebDavSearchServer( SearchWrapper wrapper ) throws IOException, PoolReadOnlyException, PathResolveException {
+        GuiServerApi guiServerApi = checkLogin();
+        if (guiServerApi != null)
+            return guiServerApi.createWebDavSearchServer(wrapper);
+        
+        return -1;
     }
 
     
