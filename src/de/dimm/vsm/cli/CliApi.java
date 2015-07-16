@@ -718,6 +718,16 @@ public class CliApi implements GuiServerApi
         return -1;
     }
 
+    @Override
+    public String checkRestoreErrFSElem( IWrapper wrapper, RemoteFSElem path ) {
+        GuiServerApi guiServerApi = checkLogin();
+        if (guiServerApi != null)
+            return guiServerApi.checkRestoreErrFSElem(wrapper, path);
+        
+        return "Kein valides Login";
+    }
+    
+
     
     
 }
